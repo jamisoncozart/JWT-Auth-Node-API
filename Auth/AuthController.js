@@ -7,7 +7,7 @@ const User = require('../user/User');
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const config = require('../config');
+const config = require('../config/config');
 
 router.post('/register', function(req, res) {
   const hashedPassword = bcrypt.hashSync(req.body.password, 8);
@@ -28,3 +28,20 @@ router.post('/register', function(req, res) {
     }
   });
 });
+
+router.get('/me', function(req, res) {
+  const token = req.headers['x-access-token'];
+  if(!token) {
+    return res.status(401).send({ auth: false, message: 'No token provided' });
+  } else {
+    jwt.verify(token, config.secret, function(err, decoded) {
+      if(err) {
+        return res.status(500).send({ auth: false, message: 'Failed to authenticate token.' });
+      } else {
+        res.status(200).send(decoded);
+      }
+    })
+  }
+});
+
+module.exports = router;
