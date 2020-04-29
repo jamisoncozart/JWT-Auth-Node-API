@@ -38,7 +38,16 @@ router.get('/me', function(req, res) {
       if(err) {
         return res.status(500).send({ auth: false, message: 'Failed to authenticate token.' });
       } else {
-        res.status(200).send(decoded);
+        User.findById(decoded.id, function(err, user) {
+          { password: 0 }
+          if(err) {
+            return res.status(500).send("There was a problem finding the user.");
+          } else if(!user) {
+            return res.status(404).send("No user found.");
+          } else {
+            res.status(200).send(user);
+          }
+        })
       }
     })
   }
