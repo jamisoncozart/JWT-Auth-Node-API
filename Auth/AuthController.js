@@ -51,6 +51,11 @@ router.post('/login', function(req, res) {
   });
 });
 
+// USER LOGOUT - NULLIFY JWT
+router.get('/logout', function(req, res) {
+  res.status(200).send({ auth: false, token: null });
+})
+
 // USER GET INFO - SEND USER INFO TO AUTHORIZED USER
 router.get('/me', function(req, res) {
   const token = req.headers['x-access-token'];
