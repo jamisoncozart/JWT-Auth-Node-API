@@ -8,6 +8,7 @@ const User = require('../user/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const config = require('../config/config');
+const VerifyToken = require('./VerifyToken');
 
 // USER REGISTER - GENERATE JWT
 router.post('/register', function(req, res) {
@@ -51,35 +52,20 @@ router.post('/login', function(req, res) {
   });
 });
 
+// logout route isn't necessary because you can destroy the JWT on the front-end
 // USER LOGOUT - NULLIFY JWT
 router.get('/logout', function(req, res) {
   res.status(200).send({ auth: false, token: null });
 })
 
 // USER GET INFO - SEND USER INFO TO AUTHORIZED USER
-router.get('/me', function(req, res) {
-  const token = req.headers['x-access-token'];
-  if(!token) {
-    return res.status(401).send({ auth: false, message: 'No token provided' });
-  } else {
-    jwt.verify(token, config.secret, function(err, decoded) {
-      if(err) {
-        return res.status(500).send({ auth: false, message: 'Failed to authenticate token.' });
-      } else {
-        User.findById(decoded.id, 
-          { password: 0 }, //projection to query that omits the password
-          function(err, user) {
-          if(err) {
-            return res.status(500).send("There was a problem finding the user.");
-          } else if(!user) {
-            return res.status(404).send("No user found.");
-          } else {
-            res.status(200).send(user);
-          }
-        });
-      }
-    });
-  }
+router.get('/me', VerifyToken, function(req, res, next) {
+  User.findById(req.userId, { password: 0 }, function(err, user) {
+    if(err) return res.status(500).send("There was a problem finding the user.");
+    if(!user) return res.status(404).send("No user found.");
+    
+    res.status(200).send(user);  
+  });
 });
 
 module.exports = router;
